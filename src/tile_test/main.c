@@ -35,13 +35,13 @@ void parallaxScroll()
     }
 }
 
-void handleParalaxStep(const unsigned char i)
+void moveBackground(const unsigned char i, const char direction)
 {
-    scroll_sky += (i % 3 == 0) ? 1 : 0;
-    scroll_clouds += (i % 2 == 0) ? 1 : 0;
-    scroll_pyramids += 1;
-    scroll_sidewalk += 2;
-    scroll_wall += 3;
+    scroll_sky += (i % 4 == 0) ? (1 * direction) : 0;
+    scroll_clouds += (i % 3 == 0) ? (1 * direction) : 0;
+    scroll_pyramids += (i % 2 == 0) ? (1 * direction) : 0;
+    scroll_sidewalk += (1 * direction);
+    scroll_wall += (3 * direction);
 }
 
 void main(void)
@@ -63,8 +63,16 @@ void main(void)
 
     while(1)
     {
-        handleParalaxStep(cycle++);
-        if (cycle == 10) { cycle = 0; }
+        switch(joypad())
+        {
+            case J_LEFT:
+                moveBackground(cycle, -1);
+                break;
+            case J_RIGHT:
+                moveBackground(cycle, 1);
+        }
+        ++cycle;
+        if (cycle == 12) { cycle = 0; }
         wait_vbl_done();
     }
 }
