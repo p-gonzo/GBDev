@@ -4,6 +4,8 @@
 #include "MyTileMap.c"
 #include "Smile.c"
 
+#define TRUE 1
+#define FALSE 0
 #define TILE_SIZE 8
 #define SCREEN_WIDTH 160
 #define SCREEN_HEIGHT 144
@@ -11,14 +13,21 @@
 #define PAST_SKY ((TILE_SIZE * 2) - 1)
 #define PAST_CLOUDS ((TILE_SIZE * 5) - 1)
 #define PAST_PYRAMIDS ((TILE_SIZE * 15) - 1)
+#define JUMP_VELOCITY 8
+#define GRAVITY 1
 
 typedef unsigned char UINT8;
 typedef char INT8;
+typedef char BOOL;
 
 UINT8 scroll_sky, scroll_clouds, scroll_pyramids, scroll_sidewalk;
 UINT8 cycle;
 
 UINT8 player_pos[] = {80 - 8, GAME_FLOOR};
+UINT8 player_delta[] = {0, 0};
+BOOL playerOnGround = TRUE;
+BOOL pressingJump = FALSE;
+BOOL jumpedFromPress = FALSE;
 
 
 void parallaxScroll()
@@ -53,7 +62,7 @@ void moveBackground(const UINT8 i, const INT8 direction)
     scroll_sidewalk += (1 * direction);
 }
 
-inline void movePlayer()
+inline void drawPlayer()
 {
     // The move_sprite function offests the x value by 8
     // and the y value by 16
@@ -78,6 +87,15 @@ void handleInput(const UINT8 cycle)
     if (input & J_DOWN)
     {
         player_pos[1]++;
+    }
+    if (input & J_A)
+    {
+        pressingJump = TRUE;
+    }
+    if (!(input & J_A))
+    {
+        pressingJump = FALSE;
+        jumpedFromPress = FALSE;
     }
 }
 
@@ -107,13 +125,28 @@ void init()
 	set_sprite_tile(0, 0);
 }
 
+void updatePlayer()
+{
+    if (playerOnGround && pressingJump && !jumpedFromPress)
+    {
+        player_delta[1] = JUMP_VELOCITY * -1;
+        jumpedFromPress = TRUE;
+    }
+    player_pos[0] += player_delta[0];
+    player_pos[1] += player_delta[1];
+    playerOnGround = (player_pos[1] >= GAME_FLOOR) ? TRUE : FALSE;
+    player_pos[1] = playerOnGround ? GAME_FLOOR : player_pos[1];
+    player_delta[1] = playerOnGround ? 0 : player_delta[1] + GRAVITY;
+}
+
 void main(void)
 {
     init();
     while(1)
     {
         handleInput(cycle);
-        movePlayer();
+        updatePlayer();
+        drawPlayer();
         ++cycle;
         if (cycle == 12) { cycle = 0; } // Used to move background in fractions of steps
         wait_vbl_done();
