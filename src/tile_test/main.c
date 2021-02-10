@@ -8,6 +8,11 @@ const UINT8 TILE_SIZE = 8;
 UINT8 scroll_sky, scroll_clouds, scroll_pyramids, scroll_sidewalk;
 UINT8 cycle;
 
+unsigned char smile[] =
+{
+  0x3C,0x3C,0x42,0x42,0x81,0x81,0xA5,0xA5,
+  0x81,0x81,0x81,0xA5,0x42,0x5A,0x3C,0x3C
+};
 void parallaxScroll()
 {
     if (LYC_REG == 0x00)
@@ -54,11 +59,22 @@ void main(void)
 
     set_interrupts(VBL_IFLAG | LCD_IFLAG);
 
-    SHOW_BKG;
     DISPLAY_ON;
 
+    UINT8 x = 80;
+	UINT8 y = 144;
+    SPRITES_8x8;
+
+    HIDE_WIN;
+    SHOW_SPRITES;
+    SHOW_BKG;
+
+    set_sprite_data(0, 0, smile);
+	set_sprite_tile(0, 0);
+    move_sprite(0, x, y);
     while(1)
     {
+
         UINT8 input = joypad();
         if (input & J_LEFT)
         {
