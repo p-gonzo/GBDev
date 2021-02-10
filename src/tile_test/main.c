@@ -2,9 +2,11 @@
 #include "MyTileSet.c"
 #include "MyTileMap.c"
 
-const unsigned char TILE_SIZE = 8;
-unsigned char scroll_sky, scroll_clouds, scroll_pyramids, scroll_sidewalk, scroll_wall;
-unsigned char cycle;
+typedef unsigned char UINT8;
+
+const UINT8 TILE_SIZE = 8;
+UINT8 scroll_sky, scroll_clouds, scroll_pyramids, scroll_sidewalk;
+UINT8 cycle;
 
 void parallaxScroll()
 {
@@ -21,32 +23,26 @@ void parallaxScroll()
     else if (LYC_REG == (TILE_SIZE * 5))
     {
         move_bkg(scroll_pyramids, 0);
-        LYC_REG = TILE_SIZE * 16 - 2;
+        LYC_REG = TILE_SIZE * 15 - 2;
     }
-    else if (LYC_REG == (TILE_SIZE * 16 - 2))
+    else if (LYC_REG == (TILE_SIZE * 15 - 2))
     {
         move_bkg(scroll_sidewalk, 0);
-        LYC_REG = TILE_SIZE * 17 - 2;
-    }
-    else if (LYC_REG == (TILE_SIZE * 17 - 2))
-    {
-        move_bkg(scroll_wall, 0);
         LYC_REG = 0x00;
     }
 }
 
-void moveBackground(const unsigned char i, const char direction)
+void moveBackground(const UINT8 i, const char direction)
 {
     scroll_sky += (i % 4 == 0) ? (1 * direction) : 0;
     scroll_clouds += (i % 3 == 0) ? (1 * direction) : 0;
-    scroll_pyramids += (i % 2 == 0) ? (1 * direction) : 0;
+    scroll_pyramids += (i % 4 == 0) ? (1 * direction) : 0;
     scroll_sidewalk += (1 * direction);
-    scroll_wall += (3 * direction);
 }
 
 void main(void)
 {
-    set_bkg_data(0, 10, MyTileSet);
+    set_bkg_data(0, 13, MyTileSet);
     set_bkg_tiles(0, 0, MyTileMapWidth, MyTileMapHeight, MyTileMap);
 
     STAT_REG = 0x45;
@@ -63,14 +59,16 @@ void main(void)
 
     while(1)
     {
-        switch(joypad())
+        UINT8 input = joypad();
+        if (input & J_LEFT)
         {
-            case J_LEFT:
-                moveBackground(cycle, -1);
-                break;
-            case J_RIGHT:
-                moveBackground(cycle, 1);
+            moveBackground(cycle, -1);
         }
+        if (input & J_RIGHT)
+        {
+            moveBackground(cycle, 1);
+        }
+        
         ++cycle;
         if (cycle == 12) { cycle = 0; }
         wait_vbl_done();
