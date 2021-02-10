@@ -25,8 +25,13 @@ UINT8 cycle;
 
 UINT8 player_pos[] = {80 - 8, GAME_FLOOR};
 UINT8 player_delta[] = {0, 0};
-BOOL playerOnGround = TRUE;
+UINT8 playerDirection;
+
 BOOL pressingJump = FALSE;
+BOOL pressingLeft = FALSE;
+BOOL pressingRight = FALSE;
+
+BOOL playerOnGround = TRUE;
 BOOL jumpedFromPress = FALSE;
 
 
@@ -54,12 +59,13 @@ void parallaxScroll()
     }
 }
 
-void moveBackground(const UINT8 i, const INT8 direction)
+void updateBackground()
 {
-    scroll_sky += (i % 4 == 0) ? (1 * direction) : 0;
-    scroll_clouds += (i % 3 == 0) ? (1 * direction) : 0;
-    scroll_pyramids += (i % 4 == 0) ? (1 * direction) : 0;
-    scroll_sidewalk += (1 * direction);
+    playerDirection= (pressingLeft ? -1 : (pressingRight ? 1 : 0));
+    scroll_sky += (cycle % 24 == 0) ? 1 : 0;
+    scroll_clouds += (cycle % 12 == 0) ? 1 : 0;
+    scroll_pyramids += (cycle % 4 == 0) ? (1 * playerDirection) : 0;
+    scroll_sidewalk += (cycle * playerDirection);
 }
 
 inline void drawPlayer()
@@ -69,30 +75,16 @@ inline void drawPlayer()
     move_sprite(0, player_pos[0] + 8, player_pos[1] + 16);
 }
 
-void handleInput(const UINT8 cycle)
+void handleInput()
 {
     UINT8 input = joypad();
-    if (input & J_LEFT)
-    {
-        moveBackground(cycle, -1);
-    }
-    if (input & J_RIGHT)
-    {
-        moveBackground(cycle, 1);
-    }
-    if (input & J_UP)
-    {
-        player_pos[1]--; 
-    }
-    if (input & J_DOWN)
-    {
-        player_pos[1]++;
-    }
+    pressingLeft = (input & J_LEFT);
+    pressingRight = (input & J_RIGHT);    
     if (input & J_A)
     {
         pressingJump = TRUE;
     }
-    if (!(input & J_A))
+    else
     {
         pressingJump = FALSE;
         jumpedFromPress = FALSE;
@@ -144,11 +136,12 @@ void main(void)
     init();
     while(1)
     {
-        handleInput(cycle);
+        handleInput();
+        updateBackground();
         updatePlayer();
         drawPlayer();
-        ++cycle;
-        if (cycle == 12) { cycle = 0; } // Used to move background in fractions of steps
+        // Background tile set automatically drawn
+        if (++cycle == 24) { cycle = 0; } // Used to move background in fractions of cycles
         wait_vbl_done();
     }
 }
