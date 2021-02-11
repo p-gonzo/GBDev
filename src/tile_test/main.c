@@ -2,17 +2,19 @@
 
 #include "MyTileSet.c"
 #include "MyTileMap.c"
-#include "Smile.c"
+#include "Player.c"
 
 #define TRUE 1
 #define FALSE 0
 #define TILE_SIZE 8
 #define SCREEN_WIDTH 160
 #define SCREEN_HEIGHT 144
-#define GAME_FLOOR (SCREEN_HEIGHT - 16)
+#define PLAYER_WIDTH 8
+#define PLAYER_HEIGHT 16
+#define GAME_FLOOR (SCREEN_HEIGHT - PLAYER_HEIGHT - 8)
 #define PAST_SKY ((TILE_SIZE * 2) - 1)
 #define PAST_CLOUDS ((TILE_SIZE * 5) - 1)
-#define PAST_PYRAMIDS ((TILE_SIZE * 15) - 1)
+#define PAST_PYRAMIDS ((TILE_SIZE * 17) - 1)
 #define JUMP_VELOCITY 8
 #define GRAVITY 1
 
@@ -64,12 +66,14 @@ void updateBackground()
     playerDirection= (pressingLeft ? -1 : (pressingRight ? 1 : 0));
     scroll_sky += (cycle % 24 == 0) ? 1 : 0;
     scroll_clouds += (cycle % 12 == 0) ? 1 : 0;
-    scroll_pyramids += (cycle % 4 == 0) ? (1 * playerDirection) : 0;
-    scroll_sidewalk += (cycle * playerDirection);
+    scroll_pyramids += (cycle % 6 == 0) ? (1 * playerDirection) : 0;
+    scroll_sidewalk += (cycle % 2 == 0) ? (1 * playerDirection) : 0;
 }
 
 inline void drawPlayer()
 {
+    if (pressingRight) {set_sprite_tile(0, 0);}
+    if (pressingLeft) {set_sprite_tile(0, 2);}
     // The move_sprite function offests the x value by 8
     // and the y value by 16
     move_sprite(0, player_pos[0] + 8, player_pos[1] + 16);
@@ -107,13 +111,13 @@ void init()
 
     DISPLAY_ON;
 
-    SPRITES_8x8;
+    SPRITES_8x16;
 
     HIDE_WIN;
     SHOW_SPRITES;
     SHOW_BKG;
 
-    set_sprite_data(0, 0, smile);
+    set_sprite_data(0, 8, Player);
 	set_sprite_tile(0, 0);
 }
 
